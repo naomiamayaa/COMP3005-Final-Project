@@ -21,9 +21,14 @@ Each team member needs:
 `git clone <your_repo_url>`
 `cd COMP3005-Final-Project`
 
-## 3. Set up venv
+## 3. Set up venv 
+### for linux/MacOS
 `python3 -m venv venv`
 `source venv/bin/activate`
+
+### for Windows
+`Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned -Force`
+`venv\Scripts\Activate.ps1`
 
 ## 4. install dependencies
 `pip install -r requirements.txt`
