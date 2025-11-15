@@ -68,3 +68,35 @@ Done.`
 - app/	CLI logic for Members, Trainers
 - Admins
 docs/	ERD + report for submission
+
+
+## Dev cycle
+When you’re done with a feature:
+Merge feature ➜ dev (via PR or git merge).
+Test dev.
+When you’re happy with everything, merge dev ➜ main.
+
+## Rough workflow for everyone 
+### Update dev
+git checkout dev
+git pull
+
+### Create your feature branch
+git checkout -b feature/whatever
+
+### Work, commit, push
+git add .
+git commit -m "Implement X"
+git push -u origin feature/whatever
+
+### When done, merge into dev
+git checkout dev
+git pull
+git merge feature/whatever
+git push
+
+### Then someone (or all) occasionally:
+git checkout main
+git pull
+git merge dev
+git push
