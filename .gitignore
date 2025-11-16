@@ -1,0 +1,18 @@
+venv/
+__pycache__/
+*.pyc
+.DS_Store
+/project-root/.vscode
+/project-root/.env
+
+# PostgreSQL data folders (never commit these)
+**/postgresql@14/
+**/pg_*/
+**/base/
+**/global/
+
+# Log files
+logfile
+*.log
+
+.vscode/ 
