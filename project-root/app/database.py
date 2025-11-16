@@ -7,11 +7,11 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 # Load .env from project root
 load_dotenv()
 
-PGHOST = os.getenv("PGHOST", "localhost")
-PGPORT = os.getenv("PGPORT", "5433")           # your running port
-PGDATABASE = os.getenv("PGDATABASE", "fitnessclub")
-PGUSER = os.getenv("PGUSER", "naomiamayalovett")
-PGPASSWORD = os.getenv("PGPASSWORD", "")
+PGHOST = os.getenv("PGHOST")
+PGPORT = os.getenv("PGPORT")
+PGDATABASE = os.getenv("PGDATABASE")
+PGUSER = os.getenv("PGUSER")
+PGPASSWORD = os.getenv("PGPASSWORD")
 
 DATABASE_URL = (
     f"postgresql+psycopg://{PGUSER}:{PGPASSWORD}@{PGHOST}:{PGPORT}/{PGDATABASE}"
