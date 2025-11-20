@@ -9,6 +9,7 @@ from sqlalchemy import (
     Time,
     ForeignKey,
     Boolean,
+    DateTime,
 )
 from sqlalchemy.orm import relationship
 from .database import Base
@@ -146,18 +147,30 @@ class Classes(Base):
     __tablename__ = "classes"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+    room_id = Column(Integer, ForeignKey("rooms.id"), nullable=True)
     trainer_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     description = Column(String(1000), nullable=True)
+    start_datetime = Column(DateTime, nullable=False)
+    end_datetime = Column(DateTime, nullable=False)
 
     class_type = Column(
         Enum(ClassType, name="class_type_enum"),
         nullable=False,
     )
 
-    duration = Column(Time, nullable=False)
-
     trainer = relationship("Trainers", foreign_keys=[trainer_id])
+    room = relationship("Rooms", backref="classes")
 
+class ClassRegistrations(Base):
+    __tablename__ = "class_registrations"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    member_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    class_id = Column(Integer, ForeignKey("classes.id"), nullable=False)
+    attended = Column(Boolean, default=False)  # or "status" enum
+
+    member = relationship("Members", backref="class_registrations")
+    gym_class = relationship("Classes", backref="registrations")
 
 # ===== Rooms table =====
 
