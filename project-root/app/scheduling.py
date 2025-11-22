@@ -76,7 +76,19 @@ def get_user_dashboard(user_id: int):
 
 # Define time windows when available for sessions or classes. Prevent overlap.
 def add_availability(trainer_id: int, day_of_week: str, start_time: time, end_time: time):
-    return None 
+    if start_time >= end_time:
+            raise ValueError("Start time must be earlier than end time.")
+
+    with SessionLocal() as db:
+        # validate if trainer exists, is start time < end time? 
+        trainer = (
+            db.query(Trainers).filter(trainer_id == Trainers.)
+        )
+
+        # look at all existing availability blocks for that trainer on that day
+        # if the new block overlaps any of them reject it
+        # save the new availability in the Trainer Availability table 
+
 
 # See assigned PT sessions and classes.
 def get_trainer_schedule(trainer_id: int):
