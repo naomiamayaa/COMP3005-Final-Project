@@ -1,3 +1,4 @@
+import datetime
 import enum
 from sqlalchemy import (
     Column,
@@ -122,7 +123,7 @@ class MemberGoals(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     member_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    current_weight = Column(Float, nullable=True)
+    body_fat_percent = Column(Float, nullable=True)
     target_weight = Column(Float, nullable=True)
 
     member = relationship("Members", back_populates="goals")
@@ -133,7 +134,7 @@ class HealthMetrics(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     member_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    date_recorded = Column(Date, nullable=False)
+    date_recorded = Column(DateTime(timezone=False), default=datetime.datetime.now, nullable=False)
     weight = Column(Float, nullable=True)
     height = Column(Float, nullable=True)
     bpm = Column(Integer, nullable=True)

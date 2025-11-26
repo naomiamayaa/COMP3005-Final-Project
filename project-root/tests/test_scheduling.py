@@ -94,28 +94,26 @@ def test_dashboard_latest_health_and_goals(db):
 
     hm1 = HealthMetrics(
         member_id=member.id,
-        date_recorded=dt.date(2024, 1, 1),
         weight=70.0,
         height=170.0,
         bpm=60,
     )
     hm2 = HealthMetrics(
         member_id=member.id,
-        date_recorded=dt.date(2024, 2, 1),
         weight=69.0,
         height=170.0,
         bpm=58,
     )
     db.add_all([hm1, hm2])
 
-    g1 = MemberGoals(member_id=member.id, current_weight=70.0, target_weight=65.0)
-    g2 = MemberGoals(member_id=member.id, current_weight=69.0, target_weight=64.0)
+    g1 = MemberGoals(member_id=member.id, body_fat_percent=70.0, target_weight=65.0)
+    g2 = MemberGoals(member_id=member.id, body_fat_percent=69.0, target_weight=64.0)
     db.add_all([g1, g2])
     db.commit()
 
     result = scheduling.get_user_dashboard(member.id)
 
-    assert result["latest_health"].date_recorded == dt.date(2024, 2, 1)
+    assert result["latest_health"].date_recorded.date() == dt.date.today()
     assert len(result["goals"]) == 2
 
 
