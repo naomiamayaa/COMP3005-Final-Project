@@ -4,7 +4,7 @@
 
 # trainers can view/update member health metrics only if the specified members are clients.
 
-from app.models import Users, UserRole, HealthMetrics
+from models.models import Users, UserRole, HealthMetrics
 from sqlalchemy import Column, DateTime
 
 # this function allows editing rights for both trainers and members. It does NOT check whether the trainer is assigned to the member. 

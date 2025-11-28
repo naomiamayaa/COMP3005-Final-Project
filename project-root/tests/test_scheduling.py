@@ -13,9 +13,9 @@ PROJECT_ROOT = os.path.dirname(CURRENT_DIR)
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-from app.database import Base
+from models.database import Base
 from app import scheduling
-from app.models import (
+from models.models import (
     Users,
     Members,
     Trainers,
@@ -41,6 +41,8 @@ TestingSessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=Fals
 @pytest.fixture(scope="module", autouse=True)
 def setup_test_db():
     Base.metadata.create_all(bind=engine)
+    # This line is now technically unused but harmless.
+    # You can delete it if you want, since scheduling no longer uses SessionLocal.
     scheduling.SessionLocal = TestingSessionLocal
     yield
     Base.metadata.drop_all(bind=engine)
@@ -71,7 +73,7 @@ def test_dashboard_empty_user(db):
     db.commit()
     db.refresh(user)
 
-    result = scheduling.get_user_dashboard(user.id)
+    result = scheduling.get_user_dashboard(db, user.id)
 
     assert result["user"].id == user.id
     assert result["latest_health"] is None
@@ -111,7 +113,7 @@ def test_dashboard_latest_health_and_goals(db):
     db.add_all([g1, g2])
     db.commit()
 
-    result = scheduling.get_user_dashboard(member.id)
+    result = scheduling.get_user_dashboard(db, member.id)
 
     assert result["latest_health"].date_recorded.date() == dt.date.today()
     assert len(result["goals"]) == 2
@@ -173,7 +175,7 @@ def test_dashboard_past_class_count_and_upcoming_sessions(db):
     ])
     db.commit()
 
-    result = scheduling.get_user_dashboard(member.id)
+    result = scheduling.get_user_dashboard(db, member.id)
 
     assert result["past_class_count"] == 1
     assert len(result["upcoming_sessions"]) == 1
@@ -197,6 +199,7 @@ def test_add_availability_creates_block(db):
     db.refresh(trainer)
 
     block = scheduling.add_availability(
+        db=db,
         trainer_id=trainer.id,
         start_date=dt.date(2024, 1, 1),
         end_date=dt.date(2024, 1, 1),
@@ -232,6 +235,7 @@ def test_add_availability_rejects_overlap(db):
 
     with pytest.raises(ValueError):
         scheduling.add_availability(
+            db=db,
             trainer_id=trainer.id,
             start_date=dt.date(2024, 1, 1),
             end_date=dt.date(2024, 1, 1),
@@ -243,6 +247,7 @@ def test_add_availability_rejects_overlap(db):
 def test_add_availability_unknown_trainer_raises(db):
     with pytest.raises(ValueError):
         scheduling.add_availability(
+            db=db,
             trainer_id=9999,
             start_date=dt.date(2024, 1, 1),
             end_date=dt.date(2024, 1, 1),
@@ -293,15 +298,15 @@ def test_get_trainer_schedule_future_only(db):
     db.add_all([past, future1, future2])
     db.commit()
 
-    result = scheduling.get_trainer_schedule(trainer.id)
+    result = scheduling.get_trainer_schedule(db, trainer.id)
     desc = [c.description for c in result]
 
     assert desc == ["Future1", "Future2"]
 
 
-def test_get_trainer_schedule_unknown_trainer():
+def test_get_trainer_schedule_unknown_trainer(db):
     with pytest.raises(ValueError):
-        scheduling.get_trainer_schedule(trainer_id=9999)
+        scheduling.get_trainer_schedule(db, trainer_id=9999)
 
 
 # -------------------------------------------------------
@@ -335,6 +340,7 @@ def test_get_available_rooms_excludes_conflicted(db):
     db.commit()
 
     available = scheduling.get_available_rooms(
+        db=db,
         start_date=dt.date(2024, 1, 1),
         end_date=dt.date(2024, 1, 1),
         start_time=dt.time(11, 0),
@@ -344,6 +350,7 @@ def test_get_available_rooms_excludes_conflicted(db):
     ids = {r.id for r in available}
     assert room2.id in ids
     assert room1.id not in ids
+
 
 def test_get_available_rooms_no_conflicts_returns_all(db):
     room1 = Rooms(
@@ -362,6 +369,7 @@ def test_get_available_rooms_no_conflicts_returns_all(db):
     db.refresh(room2)
 
     available = scheduling.get_available_rooms(
+        db=db,
         start_date=dt.date(2024, 2, 1),
         end_date=dt.date(2024, 2, 1),
         start_time=dt.time(9, 0),
