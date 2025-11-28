@@ -1,5 +1,5 @@
 
-from app.models import Users, UserRole, MemberGoals
+from models.models import Users, UserRole, MemberGoals
 
 # if the user is a member, allow create/edit/delete of MemberGoal.
 

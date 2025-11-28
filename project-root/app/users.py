@@ -1,7 +1,7 @@
 from datetime import datetime, date, time, timedelta
 from sqlalchemy import and_, or_
 
-from app.models import Users, UserRole, Sex
+from models.models import Users, UserRole, Sex
 import hashlib
 
 # user registration: #Add new user

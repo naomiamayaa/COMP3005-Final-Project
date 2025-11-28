@@ -17,12 +17,12 @@ from app.users import add_user, update_user, delete_user, get_user_by_id, get_al
 from app.member_goals import add_member_goals, update_member_goals, get_member_goals, get_all_member_goals, delete_member_goal, delete_all_member_goals           
 from app.health_metrics import add_health_metric, get_health_metrics, delete_health_metric
 from app.member_lookup import allow_lookup_member, lookup_member
-from app.models import Rooms, RoomType
+from models.models import Rooms, RoomType
 
 
 
-from app.database import Base
-from app.models import (
+from models.database import Base
+from models.models import (
     Users,
     Members,
     HealthMetrics,

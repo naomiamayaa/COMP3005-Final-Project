@@ -15,9 +15,9 @@ if PROJECT_ROOT not in sys.path:
 from app.users import add_user, update_user, delete_user, get_user_by_id, get_all_users
 from app.member_goals import add_member_goals, update_member_goals, get_member_goals, get_all_member_goals, delete_member_goal, delete_all_member_goals           
 
-from app.database import Base
+from models.database import Base
 from app import scheduling
-from app.models import (
+from models.models import (
     Users,
     Members,
     HealthMetrics,

@@ -1,6 +1,6 @@
 # create_tables.py
-from app.database import engine, Base
-import app.models  # noqa: F401  # ensures models are imported and registered
+from models.database import engine, Base
+import models.models  # noqa: F401  # ensures models are imported and registered
 
 
 def main():

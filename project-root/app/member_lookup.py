@@ -1,7 +1,7 @@
 # lookup_member(...)  (F9) Search by name (case-insensitive) 
 # and view current goal and last metric. No editing rights. (trainer’s POV)
 
-from app.models import ClassType, Users, UserRole, MemberGoals, HealthMetrics, Classes, ClassRegistrations
+from models.models import ClassType, Users, UserRole, MemberGoals, HealthMetrics, Classes, ClassRegistrations
 from sqlalchemy import desc
 
 # checks if the trainer is allowed to lookup the member (the trainer must the the member's personal trainer)
