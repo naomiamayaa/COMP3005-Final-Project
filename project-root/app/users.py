@@ -124,6 +124,12 @@ def update_user(session, user_id, email_input=None, first_name=None, last_name=N
 
 # ----------------------get/delete user details-----------------------------
 
+def get_user_by_email(session, email):
+    user = session.query(Users).filter_by(email=email).first()
+    if not user:
+        raise ValueError(f"No user found with email={email}.")
+    return user
+
 def get_user_by_id(session, user_id):
     user = session.query(Users).filter_by(id=user_id).first()
     if not user:
@@ -144,3 +150,21 @@ def delete_user(session, user_id):
     print(f"User with id={user_id} has been deleted.")    
     return 1
 
+# get the role of a user by email, else value error
+def get_user_role_by_email(session, email):
+
+    user = session.query(Users).filter_by(email=email).first()
+    if not user:
+        raise ValueError(f"No user found with email={email}.")
+    return user.role
+    
+# authenticate user: returns user object if authenticated, else None
+def authentication(session, email: str, password: str):
+
+    user = get_user_by_email(session, email)
+    if user and user.password_hash == hashlib.sha256(password.encode()).hexdigest():
+        print("User authenticated:", user.email)
+        return user
+
+    print("Could not authenticate user:", email)
+    raise ValueError("Authentication failed. Check email and password.")
