@@ -18,7 +18,7 @@ DATABASE_URL = (
 )
 
 # echo=True prints SQL – useful while developing
-engine = create_engine(DATABASE_URL, echo=True, future=True)
+engine = create_engine(DATABASE_URL, echo=False, future=True) # change echo to False in productionn
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
