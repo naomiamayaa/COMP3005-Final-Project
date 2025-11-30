@@ -18,6 +18,7 @@ def main():
     db = SessionLocal()
     try:
         create_models()
+        #seed(db)
 
         print()
         print()
@@ -45,7 +46,6 @@ def main():
                         print("- You have member privileges.")
                         member_POV(db, user)
             
-
                     elif user.role == UserRole.TRAINER:
                         print("- You have trainer privileges.")
                         trainer_pov(user)
@@ -74,7 +74,7 @@ def main():
                 break
 
             else:
-                print("Invalid choice. Please enter a number between 1 and 3.")
+                print("enter a number between 1 and 3.")
 
     finally:
         db.close()

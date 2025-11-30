@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.orm import joinedload
 
 from models.models import (
+    Users,
     Classes,
     ClassRegistrations,
     ClassType,
@@ -86,6 +87,11 @@ def register_for_group_class(db: Session, member_id: int, class_id: int):
     # Must be group class
     if gym_class.class_type != ClassType.GROUP:
         raise ValueError("This is not a group class.")
+    
+    # if the member is already registered in the group class selected (to avoid duplicates):
+    alr_registered = db.query(ClassRegistrations).filter_by(class_id=class_id).first() and db.query(ClassRegistrations).filter_by(member_id=member_id).first()
+    if alr_registered:
+        raise ValueError(f"Member is already registered for class id = {class_id}.")
 
     # Check room capacity
     current_count = db.query(ClassRegistrations).filter_by(class_id=class_id).count()
@@ -368,6 +374,224 @@ def list_classes(db: Session):
         })
 
     return result
+
+
+# count past group classes attended by a specific member id, returns int
+def count_past_classes(db, member_id: int):
+    
+    now = datetime.now()
+    return (
+        db.query(ClassRegistrations)
+        .join(Classes)
+        .filter(
+            ClassRegistrations.member_id == member_id,
+            ClassRegistrations.attended == True,
+            Classes.class_type == ClassType.GROUP,
+            Classes.end_datetime < now
+        )
+        .count()
+    )
+
+def print_upcoming_pt_sessions(db, member_id: int):
+
+    now = datetime.now()
+
+    # query PT sessions booked by this member that are in the future
+    sessions = (
+        db.query(Classes)
+        .join(ClassRegistrations, ClassRegistrations.class_id == Classes.id)
+        .join(Users, Classes.trainer_id == Users.id)  # get trainer info
+        .filter(
+            Classes.class_type == ClassType.PT,
+            ClassRegistrations.member_id == member_id,
+            Classes.start_datetime > now
+        )
+        .order_by(Classes.start_datetime.asc())
+        .all()
+    )
+
+    if not sessions:
+        print("No upcoming PT sessions booked.")
+        return
+
+    print("Upcoming PT Sessions:")
+    for session in sessions:
+        trainer_name = f"{session.trainer.first_name} {session.trainer.last_name}"
+        print(f" class id: {session.id} - {session.start_datetime.strftime('%Y-%m-%d %H:%M')} with {trainer_name}")
+
+
+def print_upcoming_group_sessions(db, member_id: int):
+
+    now = datetime.now()
+
+    # query g sessions booked by this member that are in the future
+    sessions = (
+        db.query(Classes)
+        .join(ClassRegistrations, ClassRegistrations.class_id == Classes.id)
+        .join(Users, Classes.trainer_id == Users.id)  # get trainer info
+        .filter(
+            Classes.class_type == ClassType.GROUP,
+            ClassRegistrations.member_id == member_id,
+            Classes.start_datetime > now
+        )
+        .order_by(Classes.start_datetime.asc())
+        .all()
+    )
+
+    if not sessions:
+        print("No upcoming group sessions booked.")
+        return
+
+    print("Upcoming Group Sessions:")
+    for session in sessions:
+        trainer_name = f"{session.trainer.first_name} {session.trainer.last_name}"
+        print(f" class id: {session.id} - {session.start_datetime.strftime('%Y-%m-%d %H:%M')} with {trainer_name}")
+
+
+# Displays available PT sessions that are not booked yet.
+def print_available_PT_sessions(db):
+    
+    now = datetime.now()
+
+    # Query available PT sessions
+
+    print("------------------------------------")
+    print(" upcoming PT classes open for registration:   ")
+    print("------------------------------------")
+
+    available_sessions = (
+        db.query(Classes).filter(
+
+            Classes.class_type == ClassType.PT,
+            Classes.start_datetime > now  # future sessions only
+
+        )
+        .outerjoin(ClassRegistrations, Classes.id == ClassRegistrations.class_id)
+        .filter(ClassRegistrations.id == None)  # not booked
+        .order_by(Classes.start_datetime.asc())
+        .all()
+    )
+
+    if not available_sessions:
+        print("no available PT sessions at the moment, sorry.")
+        return None
+
+    print("Available PT sessions:")
+    for session in available_sessions:
+        trainer_name = f"{session.trainer.first_name} {session.trainer.last_name}"
+        print(f" class id: {session.id} start time: {session.start_datetime.strftime('%Y-%m-%d %H:%M')} with {trainer_name}")
+
+    return available_sessions
+
+
+
+# count past group classes attended by a specific member id, returns int
+def count_past_classes(db, member_id: int):
+    
+    now = datetime.now()
+    return (
+        db.query(ClassRegistrations)
+        .join(Classes)
+        .filter(
+            ClassRegistrations.member_id == member_id,
+            ClassRegistrations.attended == True,
+            Classes.class_type == ClassType.GROUP,
+            Classes.end_datetime < now
+        )
+        .count()
+    )
+
+def print_upcoming_pt_sessions(db, member_id: int):
+
+    now = datetime.now()
+
+    # query PT sessions booked by this member that are in the future
+    sessions = (
+        db.query(Classes)
+        .join(ClassRegistrations, ClassRegistrations.class_id == Classes.id)
+        .join(Users, Classes.trainer_id == Users.id)  # get trainer info
+        .filter(
+            Classes.class_type == ClassType.PT,
+            ClassRegistrations.member_id == member_id,
+            Classes.start_datetime > now
+        )
+        .order_by(Classes.start_datetime.asc())
+        .all()
+    )
+
+    if not sessions:
+        print("No upcoming PT sessions booked.")
+        return
+
+    print("Upcoming PT Sessions:")
+    for session in sessions:
+        trainer_name = f"{session.trainer.first_name} {session.trainer.last_name}"
+        print(f" class id: {session.id} - {session.start_datetime.strftime('%Y-%m-%d %H:%M')} with {trainer_name}")
+
+
+def print_upcoming_group_sessions(db, member_id: int):
+
+    now = datetime.now()
+
+    # query g sessions booked by this member that are in the future
+    sessions = (
+        db.query(Classes)
+        .join(ClassRegistrations, ClassRegistrations.class_id == Classes.id)
+        .join(Users, Classes.trainer_id == Users.id)  # get trainer info
+        .filter(
+            Classes.class_type == ClassType.GROUP,
+            ClassRegistrations.member_id == member_id,
+            Classes.start_datetime > now
+        )
+        .order_by(Classes.start_datetime.asc())
+        .all()
+    )
+
+    if not sessions:
+        print("No upcoming group sessions booked.")
+        return
+
+    print("Upcoming Group Sessions:")
+    for session in sessions:
+        trainer_name = f"{session.trainer.first_name} {session.trainer.last_name}"
+        print(f" class id: {session.id} - {session.start_datetime.strftime('%Y-%m-%d %H:%M')} with {trainer_name}")
+
+
+# Displays available PT sessions that are not booked yet.
+def print_available_PT_sessions(db):
+    
+    now = datetime.now()
+
+    # Query available PT sessions
+
+    print("------------------------------------")
+    print(" upcoming PT classes open for registration:   ")
+    print("------------------------------------")
+
+    available_sessions = (
+        db.query(Classes).filter(
+
+            Classes.class_type == ClassType.PT,
+            Classes.start_datetime > now  # future sessions only
+
+        )
+        .outerjoin(ClassRegistrations, Classes.id == ClassRegistrations.class_id)
+        .filter(ClassRegistrations.id == None)  # not booked
+        .order_by(Classes.start_datetime.asc())
+        .all()
+    )
+
+    if not available_sessions:
+        print("no available PT sessions at the moment, sorry.")
+        return None
+
+    print("Available PT sessions:")
+    for session in available_sessions:
+        trainer_name = f"{session.trainer.first_name} {session.trainer.last_name}"
+        print(f" class id: {session.id} start time: {session.start_datetime.strftime('%Y-%m-%d %H:%M')} with {trainer_name}")
+
+    return available_sessions
+
 
 #added functions
 def show_trainer_availability(session):
