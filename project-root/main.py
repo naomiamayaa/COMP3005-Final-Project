@@ -8,6 +8,11 @@ from app.cli.commands.member import member_POV
 from app.cli.commands.trainer import trainer_pov
 from models.database import SessionLocal
 
+#added
+from app.cli.commands.admin import admin_dashboard, equipment_management_menu, class_scheduling_menu 
+from app.cli.commands.member import member_POV
+from app.cli.commands.trainer import trainer_pov
+
 def main():
 
     db = SessionLocal()
@@ -48,7 +53,7 @@ def main():
 
                     elif user.role == UserRole.ADMIN:
                         print("- You have admin privileges.")
-
+                        admin_dashboard(db, user)
                 else:
                     print("Sign in failed.")
 

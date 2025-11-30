@@ -70,7 +70,7 @@ def list_maintenance_log(
             "room_number": rec.equipment.room.room_number,
             "status": rec.status.value,
             "report_date": rec.report_date,
-            "assigned_to": rec.assigned_to,  # You can format differently if needed
+            "assigned_to": rec.assigned_to,  
             "description": rec.description
         })
 
