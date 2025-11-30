@@ -5,7 +5,7 @@ from app.cli.sign_in import user_sign_in, sign_up
 from models.create_models import main as create_models
 from models.models import UserRole
 from app.cli.commands.member import member_POV
-from app.populate_tables import seed
+from app.cli.commands.trainer import trainer_pov
 from models.database import SessionLocal
 
 def main():
@@ -43,7 +43,7 @@ def main():
             
                     elif user.role == UserRole.TRAINER:
                         print("- You have trainer privileges.")
-                        # trainer.POV(db, user)
+                        trainer_pov(user)
             
 
                     elif user.role == UserRole.ADMIN:
