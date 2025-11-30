@@ -1,6 +1,9 @@
 from datetime import datetime, date, time, timedelta
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
+#added
+from sqlalchemy import select
+
 
 # from models.database import SessionLocal
 
@@ -146,6 +149,63 @@ def add_availability(
 
     return new_block
 
+#added room availability function
+def add_room_availability(
+    db: Session,
+    room_id: int,
+    start_date: date,
+    end_date: date,
+    start_time: time,
+    end_time: time,
+):
+    """
+    Add an availability block for a room. Prevents overlap with existing blocks.
+    Caller must manage the db session.
+    """
+
+    if start_time >= end_time:
+        raise ValueError("Start time must be earlier than end time.")
+
+    if start_date > end_date:
+        raise ValueError("Start date must be on or before end date.")
+
+    # check room exists
+    room = db.query(Rooms).filter(Rooms.id == room_id).one_or_none()
+    if room is None:
+        raise ValueError(f"Room with id {room_id} does not exist.")
+
+    # check for overlapping availability
+    conflict = (
+        db.query(RoomAvailability)
+        .filter(RoomAvailability.room_id == room_id)
+        .filter(RoomAvailability.start_date <= end_date)
+        .filter(RoomAvailability.end_date >= start_date)
+        .filter(RoomAvailability.start_time <= end_time)
+        .filter(RoomAvailability.end_time >= start_time)
+        .first()
+    )
+
+    if conflict is not None:
+        raise ValueError(
+            "New availability overlaps an existing availability block "
+            f"(id={conflict.id})."
+        )
+
+    # create the new availability block
+    new_block = RoomAvailability(
+        room_id=room_id,
+        start_date=start_date,
+        end_date=end_date,
+        start_time=start_time,
+        end_time=end_time,
+    )
+
+    db.add(new_block)
+    db.commit()
+    db.refresh(new_block)
+
+    return new_block
+
 
 # =========================================================
 # 3. See assigned PT sessions and classes (trainer schedule).
@@ -192,8 +252,8 @@ def get_available_rooms(
     end_time: time,
 ):
     """
-    Return all rooms that are available in the given window.
-
+    Return all rooms that are AVAILABLE in the given window
+    (i.e., they have an availability block that fully covers that window).
     Caller must manage db session.
     """
 
@@ -203,20 +263,14 @@ def get_available_rooms(
     if start_date > end_date:
         raise ValueError("Start date must be on or before end date.")
 
-    # find rooms that ARE in conflict with any existing availability
-    conflicted_rooms_subq = (
-        db.query(RoomAvailability.room_id)
-        .filter(RoomAvailability.start_date <= end_date)
-        .filter(RoomAvailability.end_date >= start_date)
-        .filter(RoomAvailability.start_time < end_time)
-        .filter(RoomAvailability.end_time > start_time)
-        .subquery()
-    )
-
-    # all rooms not in the conflicted set
+    # Rooms that have at least one availability block covering the whole window
     available_rooms = (
         db.query(Rooms)
-        .filter(Rooms.id.notin_(conflicted_rooms_subq))
+        .join(RoomAvailability, Rooms.id == RoomAvailability.room_id)
+        .filter(RoomAvailability.start_date <= start_date)
+        .filter(RoomAvailability.end_date >= end_date)
+        .filter(RoomAvailability.start_time <= start_time)
+        .filter(RoomAvailability.end_time >= end_time)
         .all()
     )
 

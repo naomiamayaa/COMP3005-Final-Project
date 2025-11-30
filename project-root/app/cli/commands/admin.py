@@ -1,17 +1,19 @@
 from datetime import date, datetime
 from sqlalchemy.orm import Session
 
-# import your functions
 from app.maintenance import list_maintenance_log, create_or_update_maintenance
 from app.classes import (
     create_class,
     update_class,
     list_classes,
+    show_room_availability,
+    show_trainer_availability,
+    get_available_trainers_and_rooms
 )
-from models.models import MaintenanceStatus, ClassType
+from models.models import MaintenanceStatus, ClassType, Equipment, Rooms
 
 
-def admin_dashboard(session: Session):
+def admin_dashboard(session: Session, user):
     """Main admin menu"""
     while True:
         print("\n=== ADMIN DASHBOARD ===")
@@ -30,6 +32,28 @@ def admin_dashboard(session: Session):
             break
         else:
             print("Invalid choice, try again.")
+
+
+def list_equipment_with_rooms(session: Session):
+    """Print all equipment and their rooms"""
+    equipments = session.query(Equipment).join(Rooms).all()
+    if not equipments:
+        print("No equipment found.")
+        return []
+
+    print("\n--- Equipment List ---")
+    result = []
+    for eq in equipments:
+        room_number = eq.room.room_number if eq.room else "Unknown"
+        status = eq.status.value if eq.status else "Unknown"
+        print(f"ID: {eq.id} | Name: {eq.name} | Room: {room_number} | Status: {status}")
+        result.append({
+            "equipment_id": eq.id,
+            "name": eq.name,
+            "room_number": room_number,
+            "status": status
+        })
+    return result
 
 
 def equipment_management_menu(session: Session):
@@ -55,20 +79,28 @@ def equipment_management_menu(session: Session):
                 )
 
         elif choice == "2":
-            equipment_id = int(input("Equipment ID: "))
-            assigned_to = input("Assign to user id (blank for none): ")
-            assigned_to = int(assigned_to) if assigned_to else None
-            description = input("Issue description: ")
+            try:
+                list_equipment_with_rooms(session)
 
-            rec = create_or_update_maintenance(
-                db=session,
-                equipment_id=equipment_id,
-                report_date=date.today(),
-                assigned_to=assigned_to,
-                description=description
-            )
+                equipment_id = int(input("Enter Equipment ID from the list above: "))
+                assigned_to = input("Assign to user id (blank for none): ")
+                assigned_to = int(assigned_to) if assigned_to else None
+                description = input("Issue description: ")
 
-            print(f"Created maintenance record {rec.id}.")
+                rec = create_or_update_maintenance(
+                    db=session,
+                    equipment_id=equipment_id,
+                    report_date=date.today(),
+                    assigned_to=assigned_to,
+                    description=description
+                )
+
+                print(f"Created maintenance record {rec.id}.")
+
+            except ValueError as e:
+                print(f"Error: {e}")
+            except Exception as e:
+                print(f"Unexpected error: {e}")
 
         elif choice == "3":
             return
@@ -87,60 +119,138 @@ def class_scheduling_menu(session: Session):
         choice = input("Choose: ").strip()
 
         if choice == "1":
-            trainer_id = int(input("Trainer ID: "))
-            room_id = int(input("Room ID: "))
-            start_str = input("Start datetime (YYYY-MM-DD HH:MM): ")
-            start_dt = datetime.strptime(start_str, "%Y-%m-%d %H:%M")
+            try:
+                start_str = input("Enter class start datetime (YYYY-MM-DD HH:MM): ")
+                start_dt = datetime.strptime(start_str, "%Y-%m-%d %H:%M")
 
-            class_type = input("Class type (PT/GROUP): ").upper()
-            class_type = ClassType.PT if class_type == "PT" else ClassType.GROUP
+                # Show only available trainers/rooms at that time
+                available_trainers, available_rooms = get_available_trainers_and_rooms(session, start_dt)
 
-            new_cls = create_class(
-                db=session,
-                trainer_id=trainer_id,
-                room_id=room_id,
-                start_datetime=start_dt,
-                class_type=class_type
-            )
-            print(f"Created class {new_cls.id}.")
+                if not available_trainers:
+                    print("No trainers available at this time.")
+                    continue
+                print("Available Trainers:")
+                for t in available_trainers:
+                    print(f"{t.id}: {t.first_name} {t.last_name}")
+
+                if not available_rooms:
+                    print("No rooms available at this time.")
+                    continue
+                print("Available Rooms:")
+                for r in available_rooms:
+                    print(f"{r.id}: Room {r.room_number} (Capacity {r.capacity})")
+
+                trainer_id = int(input("Select Trainer ID from available: "))
+                room_id = int(input("Select Room ID from available: "))
+
+                class_type_str = input("Class type (PT/GROUP): ").upper()
+                if class_type_str not in ["PT", "GROUP"]:
+                    print("Invalid class type.")
+                    continue
+                class_type = ClassType.PT if class_type_str == "PT" else ClassType.GROUP
+
+                new_cls = create_class(
+                    db=session,
+                    trainer_id=trainer_id,
+                    room_id=room_id,
+                    start_datetime=start_dt,
+                    class_type=class_type
+                )
+                print(f"Created class {new_cls.id}.")
+
+            except ValueError as e:
+                print(f"Error: {e}")
+            except Exception as e:
+                print(f"Unexpected error: {e}")
 
         elif choice == "2":
-            class_id = int(input("Class ID: "))
-            trainer_id = int(input("New Trainer ID: "))
-            room_id = int(input("New Room ID: "))
+            try:
+                class_id = int(input("Class ID: "))
+                trainer_id = int(input("New Trainer ID: "))
+                room_id = int(input("New Room ID: "))
+                start_str = input("New Start datetime (YYYY-MM-DD HH:MM): ")
+                end_str = input("New End datetime (YYYY-MM-DD HH:MM): ")
 
-            start_str = input("New Start datetime (YYYY-MM-DD HH:MM): ")
-            end_str = input("New End datetime (YYYY-MM-DD HH:MM): ")
+                try:
+                    start_dt = datetime.strptime(start_str, "%Y-%m-%d %H:%M")
+                    end_dt = datetime.strptime(end_str, "%Y-%m-%d %H:%M")
+                except ValueError:
+                    print("Invalid datetime format.")
+                    continue
 
-            start_dt = datetime.strptime(start_str, "%Y-%m-%d %H:%M")
-            end_dt = datetime.strptime(end_str, "%Y-%m-%d %H:%M")
+                class_type_str = input("Class type (PT/GROUP): ").upper()
+                if class_type_str not in ["PT", "GROUP"]:
+                    print("Invalid class type.")
+                    continue
 
-            class_type = input("Class type (PT/GROUP): ").upper()
-            class_type = ClassType.PT if class_type == "PT" else ClassType.GROUP
+                class_type = ClassType.PT if class_type_str == "PT" else ClassType.GROUP
 
-            updated = update_class(
-                db=session,
-                class_id=class_id,
-                trainer_id=trainer_id,
-                room_id=room_id,
-                start_datetime=start_dt,
-                end_datetime=end_dt,
-                class_type=class_type
-            )
-
-            print(f"Updated class {updated.id}.")
-
-        elif choice == "3":
-            classes = list_classes(session)
-            print("\n--- All Classes ---")
-            for c in classes:
-                print(
-                    f"{c['class_id']}: {c['class_type']} "
-                    f"from {c['start_datetime']} to {c['end_datetime']}"
+                updated = update_class(
+                    db=session,
+                    class_id=class_id,
+                    trainer_id=trainer_id,
+                    room_id=room_id,
+                    start_datetime=start_dt,
+                    end_datetime=end_dt,
+                    class_type=class_type
                 )
+                print(f"Updated class {updated.id}.")
 
+            except ValueError as e:
+                print(f"Error: {e}")
+            except Exception as e:
+                print(f"Unexpected error: {e}")
+
+        elif choice == "2":
+            try:
+                class_id = int(input("Class ID: "))
+                trainer_id = int(input("New Trainer ID: "))
+                room_id = int(input("New Room ID: "))
+                start_str = input("New Start datetime (YYYY-MM-DD HH:MM): ")
+                end_str = input("New End datetime (YYYY-MM-DD HH:MM): ")
+
+                try:
+                    start_dt = datetime.strptime(start_str, "%Y-%m-%d %H:%M")
+                    end_dt = datetime.strptime(end_str, "%Y-%m-%d %H:%M")
+                except ValueError:
+                    print("Invalid datetime format.")
+                    continue
+
+                class_type_str = input("Class type (PT/GROUP): ").upper()
+                if class_type_str not in ["PT", "GROUP"]:
+                    print("Invalid class type.")
+                    continue
+
+                class_type = ClassType.PT if class_type_str == "PT" else ClassType.GROUP
+
+                updated = update_class(
+                    db=session,
+                    class_id=class_id,
+                    trainer_id=trainer_id,
+                    room_id=room_id,
+                    start_datetime=start_dt,
+                    end_datetime=end_dt,
+                    class_type=class_type
+                )
+                print(f"Updated class {updated.id}.")
+
+            except ValueError as e:
+                print(f"Error: {e}")
+            except Exception as e:
+                print(f"Unexpected error: {e}")
+        elif choice == "3":
+            try:
+                classes = list_classes(session)
+                print("\n--- All Classes ---")
+                for c in classes:
+                    print(
+                        f"{c['class_id']}: {c['class_type']} | "
+                        f"Trainer: {c['trainer_name']} | Room: {c['room_number']} | "
+                        f"from {c['start_datetime']} to {c['end_datetime']}"
+                    )
+            except Exception as e:
+                print(f"Error fetching classes: {e}")
         elif choice == "4":
             return
-
         else:
             print("Invalid choice.")

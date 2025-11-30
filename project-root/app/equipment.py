@@ -29,3 +29,30 @@ def add_equipment_to_room(
     db.refresh(new_equipment)
 
     return new_equipment
+
+
+
+def list_equipment_with_rooms(db: Session):
+    """
+    List all equipment along with their room numbers and status.
+    """
+    equipments = db.query(Equipment).join(Rooms).all()
+
+    if not equipments:
+        print("No equipment found.")
+        return []
+
+    print("\n--- Equipment List ---")
+    result = []
+    for eq in equipments:
+        room_number = eq.room.room_number if eq.room else "Unknown"
+        status = eq.status.value if eq.status else "Unknown"
+        print(f"ID: {eq.id} | Name: {eq.name} | Room: {room_number} | Status: {status}")
+        result.append({
+            "equipment_id": eq.id,
+            "name": eq.name,
+            "room_number": room_number,
+            "status": status
+        })
+    
+    return result
