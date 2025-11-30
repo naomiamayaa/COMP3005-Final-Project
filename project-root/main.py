@@ -5,6 +5,7 @@ from app.cli.sign_in import user_sign_in, sign_up
 from models.create_models import main as create_models
 from models.models import UserRole
 from app.cli.commands.member import member_POV
+from app.populate_tables import seed
 from models.database import SessionLocal
 
 def main():
@@ -12,6 +13,7 @@ def main():
     db = SessionLocal()
     try:
         create_models()
+        #seed(db)
 
         print()
         print()
@@ -39,7 +41,6 @@ def main():
                         print("- You have member privileges.")
                         member_POV(db, user)
             
-
                     elif user.role == UserRole.TRAINER:
                         print("- You have trainer privileges.")
                         # trainer.POV(db, user)
@@ -68,7 +69,7 @@ def main():
                 break
 
             else:
-                print("Invalid choice. Please enter a number between 1 and 3.")
+                print("enter a number between 1 and 3.")
 
     finally:
         db.close()
