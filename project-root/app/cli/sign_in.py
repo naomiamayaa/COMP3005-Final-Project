@@ -1,13 +1,9 @@
 from app.users import add_user, authentication
-
-from models.database import SessionLocal   
-
 # remember to create sessions inside fuctions to prevent session leaks
 
 # sign in: returns user object if authenticated, else None
-def user_sign_in():
-
-    db = SessionLocal()
+def user_sign_in(db):
+    
         # ask for user credentials
     print("Please sign in to continue.")
     user_email = input("Email: ").strip()
@@ -24,11 +20,12 @@ def user_sign_in():
         choice = input("Try again? (y/n): ").strip().lower()
         if choice != "y":
             return None
+   
                 
-def sign_up():
-
-    db = SessionLocal()
+def sign_up(db):
+    
     print("create a new account by providing the following details:")
+
     first_name = input("First Name: ").strip()
     last_name = input("Last Name: ").strip()
     email = input("Email: ").strip()
@@ -44,4 +41,6 @@ def sign_up():
     except ValueError as e:
         print("Error during sign up:", e)
         return None
+    
+  
     

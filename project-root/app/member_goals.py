@@ -86,13 +86,14 @@ def get_member_goals(session, user_id):
 
     return goals
 
-def get_all_member_goals(session):
-    goals = session.query(MemberGoals).all()
+def get_all_user_goals(session, user_id):  # get all the goals of a member
 
+    goals = session.query(MemberGoals).filter(MemberGoals.member_id == user_id).all()
     if not goals:
         print("No member goals found in the database. Empty List returned.")
         return []
     return goals
+
 
 def delete_member_goal(session, id, user_id):
         
