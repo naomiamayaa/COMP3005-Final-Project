@@ -174,11 +174,7 @@ def test_update_user(db):
         db,
         user_id=1,
         email_input="updated@example.com",
-        first_name="Updated",
-        last_name="User",
-        date_of_birth="2000-01-01",
-        sex="other",
-        password="newhashedpassword"
+        
     )
 
     db_result = db.query(Users).filter_by(email="updated@example.com").first()

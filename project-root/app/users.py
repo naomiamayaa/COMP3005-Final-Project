@@ -69,57 +69,57 @@ def add_user(session, email_input, first_name, last_name, date_of_birth, role_in
 
 # update generic user fields 
 def update_user(session, user_id, email_input=None, first_name=None, last_name=None,
-                date_of_birth=None, role=None, sex=None, password=None):
+                date_of_birth=None, sex=None, password=None):
 
-    # if user id not in database
+      # Fetch the user
     user = session.query(Users).filter_by(id=user_id).first()
-    print (f"user id {user_id} found.")
     if not user:
-        raise ValueError(f"No user found with id={user_id}.")   
-    
-    # if the to-be-updated email is already used
-    used_email = session.query(Users).filter_by(email=email_input).first() 
-    if used_email:
-        raise ValueError("Email already exists for another user.")
-    else:
+        raise ValueError(f"No user found with id={user_id}.")
+
+    # Update email
+    if email_input is not None:
+        used_email = session.query(Users).filter_by(email=email_input).first()
+        if used_email and used_email.id != user_id:
+            raise ValueError("Email already exists for another user.")
         user.email = email_input
 
-    if first_name == "" or last_name == "":
-        raise ValueError("First or last name empty. Cannot proceed.")
-    else:
-        user.first_name = first_name.capitalize()
-        user.last_name= last_name.capitalize()
-
-    # date of birth validity
-    try:
-        dob = datetime.strptime(date_of_birth, "%Y-%m-%d").date()
-        user.date_of_birth = dob
-    except ValueError:
-        raise ValueError("Invalid date format. Please use YYYY-MM-DD.")
+    # Update names
+    if first_name is not None:
+        if first_name.strip() == "":
+            raise ValueError("First name cannot be empty.")
+        user.first_name = first_name.strip().capitalize()
     
-    if password == "":
-        raise ValueError("empty password. Cannot proceed.")
-    else:
-        user.password = password
-        print (f"password for user {user_id} has been changed.")
+    if last_name is not None:
+        if last_name.strip() == "":
+            raise ValueError("Last name cannot be empty.")
+        user.last_name = last_name.strip().capitalize()
 
-    if role:
-        raise ValueError("eannot change a user's role once established.")
-    
-    if sex:
-        # sex enum validity check
+    # Update date of birth
+    if date_of_birth is not None:
         try:
-            # Convert to lowercase to match your enum values
-            role_enum = Sex(sex.lower())   
-            sex = role_enum
-            print(f"sex changed.")
+            dob = datetime.strptime(date_of_birth, "%Y-%m-%d").date()
+            user.date_of_birth = dob
         except ValueError:
-            # if role_input not in enum valid list, raise error
+            raise ValueError("Invalid date format. Use YYYY-MM-DD.")
+
+    # Update password
+    if password is not None:
+        if password.strip() == "":
+            raise ValueError("Password cannot be empty.")
+        import hashlib
+        user.password_hash = hashlib.sha256(password.encode()).hexdigest()
+
+    # Update sex
+    if sex is not None:
+        try:
+            user.sex = Sex(sex.lower())
+        except ValueError:
             valid = [s.value for s in Sex]
             raise ValueError(f"Invalid sex '{sex}'. Must be one of: {valid}")
 
+    # Commit changes
     session.commit()
-    print("User details updated successfully.")
+    print(f"User {user_id} updated successfully.")
     return user
 
 # ----------------------get/delete user details-----------------------------
