@@ -3,6 +3,14 @@
 
 The objective of this project is to design and implement a functional Health and Fitness Club Management System that operates as a centralized, database‑driven platform for managing the daily activities and operations of a modern fitness center. 
 
+
+Youtube Submission Link:
+https://www.youtube.com/watch?v=n_mrF7VLnLE 
+
+Github Submission Link:
+https://github.com/naomiamayaa/COMP3005-Final-Project 
+
+
 This database-driven management system is built using **Python**, **SQLAlchemy (ORM)**, and **PostgreSQL**.  
 The supports **Members**, **Trainers**, and **Administrators**, allowing scheduling, availability management, and goal and equipment tracking.
 
