@@ -89,7 +89,7 @@ def register_for_group_class(db: Session, member_id: int, class_id: int):
         raise ValueError("This is not a group class.")
     
     # if the member is already registered in the group class selected (to avoid duplicates):
-    alr_registered = db.query(ClassRegistrations).filter_by(class_id=class_id).first() and db.query(ClassRegistrations).filter_by(member_id=member_id).first()
+    alr_registered = db.query(ClassRegistrations).filter_by(class_id=class_id, member_id=member_id).first()
     if alr_registered:
         raise ValueError(f"Member is already registered for class id = {class_id}.")
 

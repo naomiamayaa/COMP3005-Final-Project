@@ -487,7 +487,7 @@ def member_registers_group_class(db, user):
     choice = int(choice)
     member_id = user.id
 
-    try:
+    try:        
         registration = register_for_group_class(db, member_id, choice)
         if registration:
             print(f"successful registration for class id = {registration.class_id}")

@@ -6,19 +6,22 @@ from models.create_models import main as create_models
 from models.models import UserRole
 from app.cli.commands.member import member_POV
 from app.cli.commands.trainer import trainer_pov
-from models.database import SessionLocal
+from models.database import SessionLocal, Base
 
+#from app.populate_tables import seed
 #added
 from app.cli.commands.admin import admin_dashboard, equipment_management_menu, class_scheduling_menu 
 from app.cli.commands.member import member_POV
 from app.cli.commands.trainer import trainer_pov
 
+
 def main():
 
     db = SessionLocal()
+
     try:
         create_models()
-        #seed(db)
+        
 
         print()
         print()

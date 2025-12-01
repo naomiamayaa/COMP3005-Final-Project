@@ -22,7 +22,7 @@ def _prompt_date(label: str):
         try:
             return datetime.strptime(raw, "%Y-%m-%d").date()
         except ValueError:
-            print("  ❌ Invalid date format. Please use YYYY-MM-DD.")
+            print("  invalid date format. Please use YYYY-MM-DD.")
 
 
 def _prompt_time(label: str):
@@ -32,7 +32,7 @@ def _prompt_time(label: str):
         try:
             return datetime.strptime(raw, "%H:%M").time()
         except ValueError:
-            print("  ❌ Invalid time format. Please use HH:MM (24h clock).")
+            print("  invalid time format. Please use HH:MM (24h clock).")
 
 
 def _print_trainer_schedule(classes):
@@ -80,10 +80,10 @@ def _handle_set_availability(user):
                 end_time=end_time,
             )
         except ValueError as e:
-            print(f"\n❌ Could not save availability: {e}")
+            print(f"\n Could not save availability: {e}")
             return
 
-        print("\n✅ Availability saved:")
+        print("\n Availability saved:")
         print(
             f"  Dates: {block.start_date} to {block.end_date}\n"
             f"  Time:  {block.start_time.strftime('%H:%M')}–"
@@ -101,7 +101,7 @@ def _handle_schedule_view(user):
         try:
             classes = get_trainer_schedule(db, trainer_id=user.id)
         except ValueError as e:
-            print(f"❌ Error loading schedule: {e}")
+            print(f" error loading schedule: {e}")
             return
 
         _print_trainer_schedule(classes)
@@ -118,7 +118,7 @@ def _handle_member_lookup(user):
     name_query = input("Enter member first or last name (partial is OK): ").strip()
 
     if not name_query:
-        print("❌ Name cannot be empty.")
+        print(" name cannot be empty.")
         return
 
     with SessionLocal() as db:
@@ -172,12 +172,12 @@ def _handle_member_lookup(user):
                 member_id=chosen_id,
             )
         except Exception as e:
-            print(f"❌ Could not verify lookup permission: {e}")
+            print(f"could not verify lookup permission: {e}")
             return
 
         if not allowed:
             print(
-                "\n❌ You can only view details for members you have an upcoming "
+                "\nyou can only view details for members you have an upcoming "
                 "PT session with."
             )
             return
@@ -186,7 +186,7 @@ def _handle_member_lookup(user):
         try:
             current_goal, last_metric = lookup_member(db, member_id=chosen_id)
         except ValueError as e:
-            print(f"❌ Error looking up member: {e}")
+            print(f"error looking up member: {e}")
             return
 
         selected = next(m for m in matches if m.id == chosen_id)
@@ -200,6 +200,7 @@ def _handle_member_lookup(user):
             print("\nCurrent Goal:")
             print(f"  Target body fat % : {current_goal.body_fat_percent}")
             print(f"  Target weight (kg): {current_goal.target_weight}")
+           
         else:
             print("\nCurrent Goal: none set yet.")
 
@@ -207,8 +208,9 @@ def _handle_member_lookup(user):
         if last_metric:
             print("\nLast Recorded Health Metric:")
             print(f"  Date recorded : {last_metric.date_recorded}")
-            print(f"  Weight (kg)   : {last_metric.weight_kg}")
-            print(f"  Body fat %    : {last_metric.body_fat_percent}")
+            print(f"  Weight (kg)   : {last_metric.weight}")
+            print(f"  height (kg)   : {last_metric.height}")
+            print(f"  Body fat %    : {last_metric.bpm}")
         else:
             print("\nLast Recorded Health Metric: none recorded yet.")
 
